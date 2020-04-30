@@ -10,6 +10,8 @@ import com.example.chuangsys.R;
  * date:2020.4.20
  */
 public class LoginViewImpl extends Activity implements LoginView {
+    LoginPresent loginPresent;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

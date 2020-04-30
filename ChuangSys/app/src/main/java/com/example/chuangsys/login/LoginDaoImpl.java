@@ -24,11 +24,11 @@ public class LoginDaoImpl implements LoginDao, MyVolley.CallBack {
 
     @Override
     public void onStringSuccess(String response) {  //myvolley框架成功响应操作
-
+        listener.returnData(response);
     }
 
     @Override
     public void onFailure(VolleyError error) {  //myvolley框架失败响应操作
-
+        listener.onFail(error);
     }
 }
