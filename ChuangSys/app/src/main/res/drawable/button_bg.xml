@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Button样式
+author:cst
+date:2020.4.30
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFCC99"/>
+    <corners android:topLeftRadius="20dip"
+        android:topRightRadius="20dip"
+        android:bottomRightRadius="20dip"
+        android:bottomLeftRadius="20dip" />
+</shape>
