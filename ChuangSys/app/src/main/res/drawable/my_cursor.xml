@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Edittext光标颜色
+author:cst
+date:2020.4.30
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+    <solid android:color="#FFFFFF" />
+    <size android:width="1dp"/>
+</shape>
