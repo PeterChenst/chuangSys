@@ -1,113 +1,170 @@
 package com.example.chuangsys.cpassword;
 
-import android.widget.EditText;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
+import android.view.View;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import cn.smssdk.SMSSDK;
 import com.example.chuangsys.R;
+import com.example.chuangsys.register.RegisterActivity;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CPasswordActivity extends AppCompatActivity {
-    EditText passwordEt1;
+/*
+ * author:cst
+ * date:2020.5.3
+ * */
+
+public class CPasswordActivity extends AppCompatActivity implements View.OnClickListener{
+    private EditText passwordEt1,passwordEt2;  //第一，第二次密码框
+    private Button button;
+    private TextInputLayout pswTLayout1,pswTLayout2;
+    private ImageView imageView1,imageView2;
+    private boolean isOpenPsw1 = false,isOpenPsw2 = false; //密码是否可视化
+    private boolean flag1 = false,flag2 = false;  //两次密码格式是否正确
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpassword);
 
-        passwordEt1 = (EditText) findViewById(R.id.cPassword_passwordEt);
-        passwordEt1.clearFocus();
+        initView();
+        validateAll();
+
     }
 
     public void initView(){
-        
+        passwordEt1 = (EditText) findViewById(R.id.cPassword_passwordEt);
+        passwordEt2 = (EditText) findViewById(R.id.cPassword_passwordEt2);
+        passwordEt1.clearFocus();
+        button = (Button) findViewById(R.id.cPassword_Button);
+        button.setOnClickListener(this);
+        pswTLayout1 = (TextInputLayout) findViewById(R.id.cpasswrod_pswTLayout1);
+        pswTLayout2 = (TextInputLayout) findViewById(R.id.cpasswrod_pswTLayout2);
+        imageView1 = (ImageView) findViewById(R.id.cPassword_isOpenImage1);
+        imageView1.setImageResource(R.drawable.closeeye);
+        imageView1.setOnClickListener(this);
+        imageView2 = (ImageView) findViewById(R.id.cPassword_isOpenImage2);
+        imageView2.setImageResource(R.drawable.closeeye);
+        imageView2.setOnClickListener(this);
     }
 
+    @Override
+    public void onClick(View v) {  //点击事件
+        switch (v.getId()){
+            case R.id.cPassword_Button:
+                String psw1 = passwordEt1.getText().toString();
+                String psw2 = passwordEt2.getText().toString();
+                if (!psw1.equals("")&&!psw2.equals("")){
+                    if (psw1.equals(psw2) && flag1 && flag2){
+                        Toast.makeText(CPasswordActivity.this,"修改密码成功",Toast.LENGTH_SHORT).show();
+                        finish();
+                    }else {
+                        Toast.makeText(CPasswordActivity.this,"两次输入密码要相同且格式正确",Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(CPasswordActivity.this,"请填写两次密码",Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case R.id.cPassword_isOpenImage1:  //密码框是否可视
+                if (!isOpenPsw1){
+                    isOpenPsw1 = true;
+                    imageView1.setImageResource(R.drawable.eyeopen);
+                    passwordEt1.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                    passwordEt1.setSelection(passwordEt1.getText().length());
+                }else {
+                    isOpenPsw1 = false;
+                    imageView1.setImageResource(R.drawable.closeeye);
+                    passwordEt1.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                    passwordEt1.setSelection(passwordEt1.getText().length());
+                }
+                break;
+
+            case R.id.cPassword_isOpenImage2:  //密码框是否可视
+                if (!isOpenPsw2){
+                    isOpenPsw2 = true;
+                    imageView2.setImageResource(R.drawable.eyeopen);
+                    passwordEt2.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                    passwordEt2.setSelection(passwordEt2.getText().length());
+                }else {
+                    isOpenPsw2 = false;
+                    imageView2.setImageResource(R.drawable.closeeye);
+                    passwordEt2.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                    passwordEt2.setSelection(passwordEt2.getText().length());
+                }
+                break;
+            default:
+                break;
+        }
+    }
 
 /////////////////////////////////////////////////////输入框验证/////////////////////////////////////////////////
-//    /**
-//     * 显示错误提示，并获取焦点
-//     * @param textInputLayout
-//     * @param error
-//     */
-//    private void showError(TextInputLayout textInputLayout, String error){
-//        textInputLayout.setError(error);
-//        textInputLayout.getEditText().setFocusable(true);
-//        textInputLayout.getEditText().setFocusableInTouchMode(true);
-//        textInputLayout.getEditText().requestFocus();
-//    }
-//    private boolean validatePhoneNum(String str){
-//        if(str.equals("")){
-//            showError(phoneTlayout,"手机号不能为空");
-//            return false;
-//        }else if (!judgePhoneNums(str)){
-//            showError(phoneTlayout,"手机号格式错误");
-//            return false;
-//        }
-//        return true;
-//    }
-//    private boolean validateYanzhang(String str){
-//        if (str.equals("")){
-//            showError(yanzhengTlayout,"验证码不能为空");
-//            return false;
-//        }
-//        return true;
-//    }
-//    private boolean validateUserName(String str){
-//        String reg = "^[\\u4e00-\\u9fa5_a-zA-Z0-9-]{1,16}$";//昵称格式：限16个字符，支持中英文、数字、减号或下划线
-//        Pattern p = Pattern.compile(reg);
-//        Matcher m = p.matcher(str.trim());
-//        boolean tem = m.matches();
-//        if(str.equals("")){
-//            showError(userNameTlayout,"用户名不能为空");
-//            return false;
-//        }else if (!tem){
-//            showError(userNameTlayout,"用户名格式:限16个字符，支持中英文、数字、减号或下划线");
-//            return false;
-//        }
-//        return true;
-//    }
-//    private boolean validatePassword(String str){
-//        //6-20 位，字母、数字、字符
-//        String reg= "^([A-Z]|[a-z]|[0-9]|[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]){6,20}$";
-//        Pattern w = Pattern.compile(reg);
-//        Matcher wk = w.matcher(str);
-//        boolean pw = wk.matches();
-//        if(str.equals("")){
-//            showError(passwordTlayout,"密码不能为空");
-//            return false;
-//        }else if (!pw){
-//            showError(passwordTlayout,"密码格式:6-20 位，字母、数字、字符");
-//            return false;
-//        }
-//        return true;
-//    }
-//    private boolean validateAll(){
-//        String phoneNumStr = phoneTlayout.getEditText().getText().toString();
-//        phoneTlayout.setErrorEnabled(false);
-//        String yanzhengStr = yanzhengTlayout.getEditText().getText().toString();
-//        yanzhengTlayout.setErrorEnabled(false);
-//        String userNameStr = userNameTlayout.getEditText().getText().toString();
-//        userNameTlayout.setErrorEnabled(false);
-//        String passwordStr = passwordTlayout.getEditText().getText().toString();
-//        passwordTlayout.setErrorEnabled(false);
-//        boolean flag1 = validatePhoneNum(phoneNumStr);
-//        boolean flag2 = validateYanzhang(yanzhengStr);
-//        boolean flag3 = validateUserName(userNameStr);
-//        boolean flag4 = validatePassword(passwordStr);
-//        if (flag1&&flag2&&flag3&&flag4){
-//            return true;
-//        }
-//        return false;
-//    }
+    private void validatePassword1(){
+        passwordEt1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //6-20 位，字母、数字、字符
+                String reg= "^([A-Z]|[a-z]|[0-9]|[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]){6,20}$";
+                Pattern w = Pattern.compile(reg);
+                Matcher wk = w.matcher(s.toString());
+                boolean pw = wk.matches();
+                if (!pw){
+                    pswTLayout1.setError("密码格式:6-20 位，字母、数字、字符");
+                    pswTLayout1.setErrorEnabled(true);
+                    flag1 = false;
+                }else {
+                    pswTLayout1.setErrorEnabled(false);
+                    flag1 = true;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+    private void validatePassword2(){
+        passwordEt2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //6-20 位，字母、数字、字符
+                String reg= "^([A-Z]|[a-z]|[0-9]|[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]){6,20}$";
+                Pattern w = Pattern.compile(reg);
+                Matcher wk = w.matcher(s.toString());
+                boolean pw = wk.matches();
+                if (!pw){
+                    pswTLayout2.setError("密码格式:6-20 位，字母、数字、字符");
+                    pswTLayout2.setErrorEnabled(true);
+                    flag2 = false;
+                }else {
+                    pswTLayout2.setErrorEnabled(false);
+                    flag2 = true;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+    private void validateAll(){
+        validatePassword1();
+        validatePassword2();
+    }
 /////////////////////////////////////////////////////输入框验证/////////////////////////////////////////////////
-
 
     @Override
     public void finish() {
         super.finish();
-        overridePendingTransition(R.anim.left_in,R.anim.right_out);
+        overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
     }
+
+
 }
