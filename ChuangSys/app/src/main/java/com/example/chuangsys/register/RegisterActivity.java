@@ -6,10 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextUtils;
-import android.text.TextWatcher;
+import android.text.*;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
@@ -32,6 +29,11 @@ import com.mob.MobSDK;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/*
+* author:cst
+* date:2020.5.3
+* */
+
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener{
     private EditText phoneNumEt,yanzhengEt,userNameEt,passwordEt;  //电话,验证码,用户名，密码框
     private Button yanzhengBtn,registerBtn;  //发送验证码，注册按钮
@@ -46,6 +48,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
     private TextInputLayout phoneTlayout,yanzhengTlayout,userNameTlayout,passwordTlayout;  //验证框
     private boolean isyanzheng = false;  //验证码是否正确
+    private  int restTime;  //验证码剩余次数
+    private String yanzhengStr; //验证码
     private boolean flag1 = false;  //四个输入框格式是否正确
     private boolean flag2 = false;
     private boolean flag3 = false;
@@ -138,8 +142,9 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     // 短信注册成功后，返回MainActivity,然后提示
                     if (i == SMSSDK.EVENT_SUBMIT_VERIFICATION_CODE) {
                         isyanzheng = true;
-                        yanzhengTlayout.setErrorEnabled(false);
                         yanzhengEt.setEnabled(false);
+                        yanzhengEt.setText(yanzhengStr);
+                        yanzhengTlayout.setErrorEnabled(false);
                         Toast.makeText(RegisterActivity.this, "提交验证码成功", Toast.LENGTH_SHORT).show();
                     } else if (i == SMSSDK.EVENT_GET_VOICE_VERIFICATION_CODE) {
                         Toast.makeText(RegisterActivity.this, "正在获取验证码", Toast.LENGTH_SHORT).show();
@@ -250,14 +255,14 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     if (yanzhengTime <= 3){
                         SMSSDK.submitVerificationCode("86", phoneNumEt.getText().toString(), yanzhengEt.getText().toString());
                         if (!isyanzheng){
-                            int restTime = 3-yanzhengTime;
+                            restTime = 3-yanzhengTime;
                             yanzhengTlayout.setError("验证码错误，还剩"+restTime+"次机会");
                             yanzhengTlayout.setErrorEnabled(true);
+                            yanzhengStr = yanzhengEt.getText().toString();
                             if (restTime <= 0){
+                                yanzhengEt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});  //字数限制
+                                yanzhengEt.setText("已失效，请重新发送");
                                 yanzhengEt.setEnabled(false);
-                                yanzhengEt.setText(null);
-                                yanzhengTlayout.setErrorEnabled(false);
-                                Toast.makeText(RegisterActivity.this,"验证码失效，请重新发送",Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
@@ -347,6 +352,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
                 yanzhengTime = 0;
                 yanzhengEt.setEnabled(true);
+                yanzhengEt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
 
                 // 2. 通过sdk发送短信验证
                 SMSSDK.getVerificationCode("86",phoneNum);
@@ -375,6 +381,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             case R.id.register_Button:  //注册按钮
                 validateAll();
                 if (flag1&&flag2&&flag3&&flag4&&isyanzheng){
+                    Toast.makeText(this, "注册成功", Toast.LENGTH_SHORT).show();
                     finish();
                 }else {
                     Toast.makeText(RegisterActivity.this,"请将信息正确补全",Toast.LENGTH_SHORT).show();
@@ -393,6 +400,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     passwordEt.setTransformationMethod(PasswordTransformationMethod.getInstance());
                     passwordEt.setSelection(passwordEt.getText().length());
                 }
+                break;
 
             default:
                 break;
