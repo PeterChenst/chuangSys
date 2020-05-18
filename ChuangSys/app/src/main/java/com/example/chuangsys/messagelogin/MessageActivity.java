@@ -3,10 +3,7 @@ package com.example.chuangsys.messagelogin;
 import android.Manifest;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.*;
 import android.text.*;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.LinkMovementMethod;
@@ -39,7 +36,7 @@ import java.util.regex.Pattern;
  * date:2020.5.3
  * */
 
-public class MessageActivity extends AppCompatActivity implements View.OnClickListener{
+public class MessageActivity extends AppCompatActivity implements View.OnClickListener,MessageLoginView{
     EditText phoneNumEt,yanzhengEt; //电话,验证码框
     Button yanzhengBtn,loginBtn;  //发送验证码，登录按钮
     String APPKEY = "2f08a194bc81e";
@@ -51,6 +48,8 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
     private TextInputLayout phoneTlayout,yanzhengTlayout;  //验证框
     private boolean flag1 = false;  //两个输入框格式是否正确
     private boolean flag2 = false;
+    MessageLoginPresent messageLoginPresent;
+    private String phoneNumStr;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,6 +76,8 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
 
         phoneTlayout = (TextInputLayout) findViewById(R.id.message_phoneTLayput);
         yanzhengTlayout = (TextInputLayout) findViewById(R.id.message_yanzhengTLayput);
+
+        messageLoginPresent = new MessageLoginPresentImpl(this);
     }
 
 //////////////////////////////////////////////////////短信验证码////////////////////////////////////////////////////////
@@ -114,6 +115,11 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
             } else if (msg.what == -8) {
                 yanzhengBtn.setText("获取验证码");
                 yanzhengBtn.setClickable(true);
+                if (!isyanzheng){
+                    phoneNumEt.setEnabled(true);
+                }else {
+                    yanzhengBtn.setEnabled(false);
+                }
                 i = 60;
             } else {
                 int i = msg.arg1;
@@ -268,14 +274,16 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
         ClickableSpan clickableSpan1 = new ClickableSpan() {
             @Override
             public void onClick(View view) {
-                if (isyanzheng){
-                    Intent intent = new Intent(MessageActivity.this, CPasswordActivity.class);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.fade_in,R.anim.fade_out);  //activity跳转动画
-                    finish();
-                }else {
-                    Toast.makeText(MessageActivity.this,"请先验证码验证",Toast.LENGTH_SHORT).show();
-                }
+                Intent intent = new Intent(MessageActivity.this, CPasswordActivity.class);
+                intent.putExtra("phone",phoneNumEt.getText().toString());
+                startActivity(intent);
+                overridePendingTransition(R.anim.fade_in,R.anim.fade_out);  //activity跳转动画
+                finish();
+//                if (isyanzheng){
+//
+//                }else {
+//                    Toast.makeText(MessageActivity.this,"请先验证码验证",Toast.LENGTH_SHORT).show();
+//                }
             }
 
             @Override
@@ -305,9 +313,12 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
                     return;
                 }
 
+                yanzhengEt.setText("");
+                isyanzheng =  false;
                 yanzhengTime = 0;
                 yanzhengEt.setEnabled(true);
                 yanzhengEt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
+                phoneNumEt.setEnabled(false);
 
                 // 2. 通过sdk发送短信验证
                 SMSSDK.getVerificationCode("86",phoneNum);
@@ -334,12 +345,14 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
                 break;
 
             case R.id.messageLogin_Button:  //注册按钮
+                phoneNumStr = phoneNumEt.getText().toString();
+                messageLoginPresent.postPhone(phoneNumStr);
                 validateAll();
-                if (flag1 && flag2 && isyanzheng){
-                    finish();
-                }else {
-                    Toast.makeText(MessageActivity.this,"请将信息正确补全",Toast.LENGTH_SHORT).show();
-                }
+//                if (flag1 && flag2 && isyanzheng){
+//
+//                }else {
+//                    Toast.makeText(MessageActivity.this,"请将信息正确补全",Toast.LENGTH_SHORT).show();
+//                }
                 break;
 
             default:
@@ -354,5 +367,16 @@ public class MessageActivity extends AppCompatActivity implements View.OnClickLi
         super.finish();
         overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
     }
+////////////////////////////////////////响应数据////////////////////////////////////////////////////
 
+    @Override
+    public void getResult(String response) {
+        Looper.prepare();
+        if (response.equals("手机号码已注册")){
+            finish();
+        }else {
+            Toast.makeText(MessageActivity.this,"请先注册",Toast.LENGTH_SHORT).show();
+        }
+        Looper.loop();
+    }
 }

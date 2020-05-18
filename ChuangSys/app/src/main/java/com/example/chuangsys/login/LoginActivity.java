@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -35,7 +36,9 @@ public class LoginActivity extends Activity implements LoginView,View.OnClickLis
     private Button loginBtn;  //登录按钮
     private CheckBox rPasswordCb; //记住密码单选框
     private SharedPreferences pref;
-    private boolean pswIsRight = false;  //密码是否正确
+    private SharedPreferences.Editor editor;
+    private LoginPresent loginPresent;
+    private String correctPassword;
 
 
 
@@ -46,7 +49,7 @@ public class LoginActivity extends Activity implements LoginView,View.OnClickLis
 
         initView();
         textViewClick();
-
+        rPassword();
     }
 
 
@@ -57,20 +60,9 @@ public class LoginActivity extends Activity implements LoginView,View.OnClickLis
         loginBtn = (Button) findViewById(R.id.login_Button);
         loginBtn.setOnClickListener(this);
         rPasswordCb = (CheckBox) findViewById(R.id.login_rPassword);
+
+        loginPresent = new LoginPresentImpl(this);
     }
-
-
-//    public void rPassword(){  //记住密码功能
-//        pref = PreferenceManager.getDefaultSharedPreferences(this);//记住密码实现模块1
-//        boolean isRemember = pref.getBoolean("remember_password",false);
-//        if (isRemember){
-//            String phoneNumStr = pref.getString("phoneNumStr","");
-//            String passwordStr = pref.getString("passwordStr","");
-//            phoneNumEt.setText(phoneNumStr);
-//            passwordEt.setText(passwordStr);
-//            rPasswordCb.setChecked(true);
-//        }
-//    }
 
 
 /////////////////////////////////////////////////////文本点击事件//////////////////////////////////////////////////
@@ -180,12 +172,15 @@ public class LoginActivity extends Activity implements LoginView,View.OnClickLis
     public void onClick(View v) {  //点击事件
         switch (v.getId()){
             case R.id.login_Button:
+
                 if (phoneNumEt.getText().toString().equals("")){
                     Toast.makeText(LoginActivity.this,"请输入电话号码",Toast.LENGTH_SHORT).show();
                 }else if (!judgePhoneNums(phoneNumEt.getText().toString())){
 
                 }else if (passwordEt.getText().toString().equals("")){
                     Toast.makeText(LoginActivity.this,"请输入密码",Toast.LENGTH_SHORT).show();
+                }else {
+                    loginPresent.login(phoneNumEt.getText().toString());
                 }
                 break;
             default:
@@ -193,16 +188,49 @@ public class LoginActivity extends Activity implements LoginView,View.OnClickLis
         }
     }
 
-
+    public void rPassword(){  //记住密码功能
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isRemember = pref.getBoolean("remember_password",false);
+        if (isRemember){
+            String phoneNumStr = pref.getString("phoneNumStr","");
+            String passwordStr = pref.getString("passwordStr","");
+            phoneNumEt.setText(phoneNumStr);
+            passwordEt.setText(passwordStr);
+            rPasswordCb.setChecked(true);
+        }
+    }
 ///////////////////////////////////////////////////后端数据///////////////////////////////////////////
-    @Override
-    public void returnData(String str) {  //后台返回成功数据
 
-    }
     @Override
-    public void onFail() {  //后台返回失败结果
+    public void getResult(String response) {
+        Looper.prepare();
+        if (response.equals("手机号未注册")){
+            Toast.makeText(LoginActivity.this,"请先注册",Toast.LENGTH_SHORT).show();
+        }else {
+            correctPassword = response;
+            if (passwordEt.getText().toString().equals(correctPassword)){
 
+                String phoneNumStr = phoneNumEt.getText().toString();
+                String passwordStr = passwordEt.getText().toString();
+                editor = pref.edit();
+                if (rPasswordCb.isChecked()){
+                    editor.putBoolean("remember_password",true);
+                    editor.putString("phoneNumStr",phoneNumStr);
+                    editor.putString("passwordStr",passwordStr);
+                }else {
+                    editor.clear();
+                }
+                editor.apply();
+
+                Toast.makeText(LoginActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
+                finish();
+            }else {
+                Toast.makeText(LoginActivity.this,"密码错误！",Toast.LENGTH_SHORT).show();
+            }
+        }
+        Looper.loop();
     }
+
 ///////////////////////////////////////////////后端数据///////////////////////////////////////////////
 
 
