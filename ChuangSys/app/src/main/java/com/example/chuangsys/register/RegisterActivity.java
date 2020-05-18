@@ -2,10 +2,7 @@ package com.example.chuangsys.register;
 
 import android.Manifest;
 import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.os.*;
 import android.text.*;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
@@ -34,7 +31,8 @@ import java.util.regex.Pattern;
 * date:2020.5.3
 * */
 
-public class RegisterActivity extends AppCompatActivity implements View.OnClickListener{
+public class RegisterActivity extends AppCompatActivity implements View.OnClickListener,RegisterView{
+    private String phoneNumStr,usernameStr,passwordStr;
     private EditText phoneNumEt,yanzhengEt,userNameEt,passwordEt;  //电话,验证码,用户名，密码框
     private Button yanzhengBtn,registerBtn;  //发送验证码，注册按钮
     private ImageView openImage;  //密码是否可视化
@@ -55,17 +53,15 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private boolean flag3 = false;
     private boolean flag4 = false;
 
-
+    RegisterPresent registerPresent;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.register);
-
         initView();
         initMobSDK();
         validateAll();
-
     }
 
 
@@ -94,6 +90,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         openImage = (ImageView) findViewById(R.id.register_isOpenImage);
         openImage.setImageResource(R.drawable.closeeye);
         openImage.setOnClickListener(this);
+
+        registerPresent = new RegisterPresentImpl(this);
     }
 
 
@@ -133,6 +131,11 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
             } else if (msg.what == -8) {
                 yanzhengBtn.setText("获取验证码");
                 yanzhengBtn.setClickable(true);
+                if (!isyanzheng){
+                    phoneNumEt.setEnabled(true);
+                }else {
+                    yanzhengBtn.setEnabled(false);
+                }
                 i = 60;
             } else {
                 int i = msg.arg1;
@@ -350,9 +353,12 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     return;
                 }
 
+                yanzhengEt.setText("");
+                isyanzheng =  false;
                 yanzhengTime = 0;
                 yanzhengEt.setEnabled(true);
                 yanzhengEt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
+                phoneNumEt.setEnabled(false);
 
                 // 2. 通过sdk发送短信验证
                 SMSSDK.getVerificationCode("86",phoneNum);
@@ -379,13 +385,17 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 break;
 
             case R.id.register_Button:  //注册按钮
-                validateAll();
-                if (flag1&&flag2&&flag3&&flag4&&isyanzheng){
-                    Toast.makeText(this, "注册成功", Toast.LENGTH_SHORT).show();
-                    finish();
-                }else {
-                    Toast.makeText(RegisterActivity.this,"请将信息正确补全",Toast.LENGTH_SHORT).show();
-                }
+                phoneNumStr = phoneNumEt.getText().toString();
+                usernameStr = userNameEt.getText().toString();
+                passwordStr = passwordEt.getText().toString();
+                registerPresent.postRegisterInfo(phoneNumStr,usernameStr,passwordStr);
+//                validateAll();
+//                if (flag1&&flag2&&flag3&&flag4&&isyanzheng){
+//
+//                    finish();
+//                }else {
+//                    Toast.makeText(RegisterActivity.this,"请将信息正确补全",Toast.LENGTH_SHORT).show();
+//                }
                 break;
 
             case R.id.register_isOpenImage:  //密码框是否可视
@@ -413,5 +423,20 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     public void finish() {  //结束动画
         super.finish();
         overridePendingTransition(R.anim.left_in,R.anim.right_out);
+    }
+
+///////////////////////////////////响应数据/////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void getResult(String response) {
+        Looper.prepare();
+        if (response.equals("添加成功")){
+            Toast.makeText(this, "注册成功", Toast.LENGTH_SHORT).show();
+        }else if (response.equals("添加失败")){
+            Toast.makeText(this, "注册失败，请重试", Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(this, "手机号已注册！", Toast.LENGTH_SHORT).show();
+        }
+        Looper.loop();
     }
 }

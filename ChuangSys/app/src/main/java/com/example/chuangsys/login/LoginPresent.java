@@ -9,5 +9,5 @@ import java.util.Map;
  * date:2020.4.20
  */
 public interface LoginPresent {
-    public void requestData(Context ctx, Map<String,String> map); //调用dao层请求数据
+    public void login(String phone); //请求用户数据
 }

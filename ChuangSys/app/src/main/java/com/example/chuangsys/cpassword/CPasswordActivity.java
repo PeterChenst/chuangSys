@@ -1,5 +1,7 @@
 package com.example.chuangsys.cpassword;
 
+import android.content.Intent;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.HideReturnsTransformationMethod;
@@ -21,13 +23,15 @@ import java.util.regex.Pattern;
  * date:2020.5.3
  * */
 
-public class CPasswordActivity extends AppCompatActivity implements View.OnClickListener{
+public class CPasswordActivity extends AppCompatActivity implements View.OnClickListener,CPasswordView{
     private EditText passwordEt1,passwordEt2;  //第一，第二次密码框
     private Button button;
     private TextInputLayout pswTLayout1,pswTLayout2;
     private ImageView imageView1,imageView2;
     private boolean isOpenPsw1 = false,isOpenPsw2 = false; //密码是否可视化
     private boolean flag1 = false,flag2 = false;  //两次密码格式是否正确
+    CPasswordPresent cPasswordPresent;
+    private String phone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +57,10 @@ public class CPasswordActivity extends AppCompatActivity implements View.OnClick
         imageView2 = (ImageView) findViewById(R.id.cPassword_isOpenImage2);
         imageView2.setImageResource(R.drawable.closeeye);
         imageView2.setOnClickListener(this);
+        cPasswordPresent = new CPasswordPresentImpl(this);
+
+        Intent intent = getIntent();
+        phone = intent.getStringExtra("phone");
     }
 
     @Override
@@ -63,8 +71,8 @@ public class CPasswordActivity extends AppCompatActivity implements View.OnClick
                 String psw2 = passwordEt2.getText().toString();
                 if (!psw1.equals("")&&!psw2.equals("")){
                     if (psw1.equals(psw2) && flag1 && flag2){
-                        Toast.makeText(CPasswordActivity.this,"修改密码成功",Toast.LENGTH_SHORT).show();
-                        finish();
+                        cPasswordPresent.postChangePassword(psw1,phone);
+
                     }else {
                         Toast.makeText(CPasswordActivity.this,"两次输入密码要相同且格式正确",Toast.LENGTH_SHORT).show();
                     }
@@ -166,5 +174,16 @@ public class CPasswordActivity extends AppCompatActivity implements View.OnClick
         overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
     }
 
-
+/////////////////////////////////////////////////////响应数据/////////////////////////////////////////////
+    @Override
+    public void getResult(String response) {
+        Looper.prepare();
+        if (response.equals("修改成功")){
+            Toast.makeText(CPasswordActivity.this,"修改密码成功",Toast.LENGTH_SHORT).show();
+            finish();
+        }else {
+            Toast.makeText(CPasswordActivity.this,"修改密码是失败",Toast.LENGTH_SHORT).show();
+        }
+        Looper.loop();
+    }
 }

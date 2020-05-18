@@ -10,18 +10,21 @@ import java.util.Map;
  * date:2020.4.20
  */
 public class LoginPresentImpl implements LoginPresent,LoginDao.LoginDaoListener {
-    @Override
-    public void returnData(String response) {
+    LoginDao loginDao;
+    LoginView loginView;
 
+    public LoginPresentImpl(LoginView loginView) {
+        this.loginView = loginView;
+        loginDao = new LoginDaoImpl();
     }
 
     @Override
-    public void onFail(VolleyError error) {
-
+    public void getResult(String response) {
+        loginView.getResult(response);
     }
 
     @Override
-    public void requestData(Context ctx, Map<String, String> map) {
-
+    public void login(String phone) {
+        loginDao.login(phone,this);
     }
 }
