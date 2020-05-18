@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chuangsys_manager.dao.RegisterDao">
+    <insert id="insertUserInfo" parameterType="com.chuangsys_manager.entity.User">
+        insert into user_tbl(phone,account,password) value (#{phone},#{account},#{password});
+    </insert>
+
+    <select id="checkPhone" resultType="int">  <!--返回int类型-->
+        select count(*) from user_tbl where phone = #{phone}
+    </select>
+</mapper>
